@@ -1,0 +1,43 @@
+---
+title: "Interacting with APIs: Census Vingette"
+author: "Autumn Locklear"
+output:
+  github_document:
+    toc: true
+    html_preview: false
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is a vignette demonstrating how to interact with an API. I used the US Census API to show how I call the data. I wrote functions to interact with different endpoints.
+
+# Requirements
+
+I used the following packages to interact with the census API...
+- [`censusapi`](https://www.rdocumentation.org/packages/censusapi/versions/0.8.0):a lightweight package to get data from the U.S. Census Bureau's APIs.
+- [`tidycensus`]()
+I used the following packages in the remainder of the document...
+```{r echo=FALSE, warning = FALSE, message=FALSE}
+#Download these packages...
+library(censusapi)
+```
+
+```{r}
+#Call some state-level data
+state_pop <-getCensus(name = "2019/pep/charage",
+  vars = c("AGE", "RACE","SEX", "GEO_ID"),
+  region = "state:*",
+  key = "0ea1c54391f6e63ed7165ae06c9d8524b7415e40")
+head(pop_demo)
+```
+
+```{r}
+#Call some county-level data
+county_pop <- getCensus(name = "2019/pep/charage",
+  vars = c("AGE", "RACE", "SEX"))
+  region = "county"
+```
+
