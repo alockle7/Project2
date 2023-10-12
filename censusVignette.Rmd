@@ -16,28 +16,63 @@ This is a vignette demonstrating how to interact with an API. I used the US Cens
 
 # Requirements
 
-I used the following packages to interact with the census API...
-- [`censusapi`](https://www.rdocumentation.org/packages/censusapi/versions/0.8.0):a lightweight package to get data from the U.S. Census Bureau's APIs.
-- [`tidycensus`]()
-I used the following packages in the remainder of the document...
+I used the following packages to interact with the census API...  
+
+- [`censusapi`](https://www.rdocumentation.org/packages/censusapi/versions/0.8.0):a lightweight package to get data from the U.S. Census Bureau's APIs.  
+
 ```{r echo=FALSE, warning = FALSE, message=FALSE}
 #Download these packages...
-library(censusapi)
+# using httr for querying the API (https://httr2.r-lib.org/)
+library(httr2)
+# used for dplyr (syntax like using %>%)
+# install.packages("tidyverse")
+library(dplyr)
+# used to convert json to data frame 
+# install.packages("jsonlite")
+library(jsonlite)
+library(stringr)
 ```
 
 ```{r}
-#Call some state-level data
+#Query state-level data
 state_pop <-getCensus(name = "2019/pep/charage",
-  vars = c("AGE", "RACE","SEX", "GEO_ID"),
+  vars = c("NAME","POP","AGE", "RACE", "HISP", "SEX"),
   region = "state:*",
   key = "0ea1c54391f6e63ed7165ae06c9d8524b7415e40")
-head(pop_demo)
+head(state_pop)
 ```
 
 ```{r}
-#Call some county-level data
-county_pop <- getCensus(name = "2019/pep/charage",
-  vars = c("AGE", "RACE", "SEX"))
-  region = "county"
+query_census <- function(name, vars, region, key) {
+  root_url <- "https://api.census.gov/data/"
+  get_string <- paste(vars, collapse=",")
+  resp <- request(root_url) %>% 
+    req_url_path_append(name) %>%
+    req_url_query(`get` = get_string, `for` = region, `key` = key) %>%
+    req_perform() %>%
+    resp_body_string()
+  return(fromJSON(resp))
+}
+
+#Set inputs
+name <- "2019/pep/charage"
+vars <- c("NAME","POP","AGE", "RACE", "HISP", "SEX")
+region <- "state:*"
+key <- "0ea1c54391f6e63ed7165ae06c9d8524b7415e40"
+
+#call the function
+query_test <- query_census(name, vars, region, key)
 ```
+
+```{r}
+#Set the first row as the headers
+colnames(query_test) <- query_test[1,]
+census_query <- query_test[-1,]
+
+#Filter for observations where state is NC
+NC_data <-as_tibble(census_query)%>%
+  filter(NAME == "North Carolina")
+```
+
+
 
